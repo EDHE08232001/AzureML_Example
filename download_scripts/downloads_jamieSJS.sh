@@ -1,0 +1,1 @@
+python3 ./download_imagenet.py --dataset JamieSJS/imagenet-10
