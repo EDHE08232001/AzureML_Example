@@ -1,0 +1,3 @@
+# Azure ML Required Packages
+azure-ai-ml
+azure-identity

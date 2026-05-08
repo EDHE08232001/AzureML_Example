@@ -1,0 +1,28 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
+
+# ── Core ML ────────────────────────────────────────────────────────────────────
+torch>=2.3.1
+torchvision>=0.18.1
+torchmetrics>=1.7.4          # MS-SSIM metric
+
+# ── Compression layers ─────────────────────────────────────────────────────────
+compressai>=1.2.6             # ResidualBottleneckBlock, AttentionBlock, deconv
+
+# ── Image processing ───────────────────────────────────────────────────────────
+Pillow>=11.2.1
+opencv-python>=4.10.0.84     # used in ImageNet preparation step (bicubic resize)
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
+numpy>=1.19.5
+tqdm>=4.57.0
+matplotlib>=3.2.1             # rate-distortion plots
+
+# ── Data Download ──────────────────────────────────────────────────────────────
+datasets>=2.16.0             # Hugging Face datasets for ImageNet download
+
+# ── Optional (not required by the main pipeline) ──────────────────────────────
+# lightning>=2.3.0            # PyTorch Lightning wrappers (not used here)
+# wandb>=0.17.2               # experiment tracking
+# dahuffman>=0.4.1            # Huffman coding for exact bpp estimation
+# tensorflow>=2.18.0          # TFLite encoder (edge-device deployment)
+# gdown>=4.7.3                # download pre-trained weights from Google Drive
