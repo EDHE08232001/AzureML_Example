@@ -160,7 +160,7 @@ def _stream_and_save(
 
     ds_kwargs: dict = dict(split=split, streaming=True)
     if hf_token:
-        ds_kwargs["token"] = hf_token
+        ds_kwargs["use_auth_token"] = hf_token
 
     ds = load_dataset(dataset_name, **ds_kwargs)
 
@@ -198,6 +198,7 @@ def download_data(
     max_retries: int            = DEFAULT_MAX_RETRIES,
     hf_token:    Optional[str]  = None,
     verify:      bool           = False,
+    split:       str            = "train"
 ) -> Path:
     """
     Download up to `num_images` images from `dataset_name` into `out_dir`.
@@ -251,7 +252,7 @@ def download_data(
     for attempt in range(1, max_retries + 1):
         try:
             header(f"Download  (attempt {attempt}/{max_retries})")
-            saved = _stream_and_save(dataset_name, out_dir, num_images, existing, token)
+            saved = _stream_and_save(dataset_name, out_dir, num_images, existing, token, split)
             total_saved += saved
 
             # Re-check after the stream ends
