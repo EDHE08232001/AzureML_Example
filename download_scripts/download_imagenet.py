@@ -149,6 +149,7 @@ def _stream_and_save(
     num_images: int,
     existing: set[int],
     hf_token: Optional[str],
+    split: str = "train"
 ) -> int:
     """Stream the HF dataset and save missing images. Returns count saved this run."""
     from datasets import load_dataset
@@ -157,7 +158,7 @@ def _stream_and_save(
     need_count = num_images - len(existing)
     info(f"Need to download {need_count:,} more image(s).")
 
-    ds_kwargs: dict = dict(split="train", streaming=True)
+    ds_kwargs: dict = dict(split=split, streaming=True)
     if hf_token:
         ds_kwargs["token"] = hf_token
 
@@ -324,6 +325,11 @@ def _parse_args() -> argparse.Namespace:
         "--verify", action="store_true",
         help="Verify existing images for corruption before resuming.",
     )
+    p.add_argument(
+        "--split", type=str, default="train",
+        metavar="SPLIT",
+        help="Dataset split to stream (default: 'train')."
+    )
     return p.parse_args()
 
 
@@ -343,4 +349,5 @@ if __name__ == "__main__":
         max_retries=args.max_retries,
         hf_token=args.hf_token,
         verify=args.verify,
+        split=args.split
     )
