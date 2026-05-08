@@ -1,0 +1,7 @@
+# Hugging Face dataset download
+# ── Data Download ──────────────────────────────────────────────────────────────
+datasets>=2.16.0             # Hugging Face datasets for ImageNet download
+
+# Others
+tqdm>=4.57.0
+Pillow>=11.2.1
