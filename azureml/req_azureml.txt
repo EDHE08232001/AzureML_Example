@@ -1,3 +1,6 @@
 # Azure ML Required Packages
 azure-ai-ml
 azure-identity
+
+# .env loader
+python-dotenv
