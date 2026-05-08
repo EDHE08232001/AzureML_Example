@@ -39,7 +39,7 @@ CONFIG = {
 
     # ── DataLoader ──────────────────────────────────────────────────────────
     "batch_size":  16,
-    "num_workers": 4,
+    "num_workers": 0,
 
     # ── Model architecture ──────────────────────────────────────────────────
     "latent_channels":  12,             # 12 latent channels → rates 1/12 … 12/12
@@ -66,5 +66,5 @@ CONFIG = {
     # ── ImageNet preparation ─────────────────────────────────────────────────
     "imagenet_raw_dir":     IMAGENET_TRAIN_DIR,
     "imagenet_out_dir":     IMAGENET_OUT_DIR,
-    "num_images_to_select": 300_000,   # select the N highest-resolution images
+    "num_images_to_select": 13_000,   # select the N highest-resolution images
 }
