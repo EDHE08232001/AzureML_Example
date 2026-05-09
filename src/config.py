@@ -44,7 +44,7 @@ CONFIG = {
 
     # ── DataLoader ──────────────────────────────────────────────────────────
     "batch_size":  16,
-    "num_workers": 0,
+    "num_workers": 4,
 
     # ── Model architecture ──────────────────────────────────────────────────
     "latent_channels":  12,             # 12 latent channels → rates 1/12 … 12/12
@@ -53,7 +53,7 @@ CONFIG = {
     # ── Training ────────────────────────────────────────────────────────────
     "num_epochs":    10,                # increase (e.g. 100+) for production runs
     "learning_rate": 1e-4,
-    "lr_decay_epoch": 9,               # epoch at which LR is multiplied by lr_gamma
+    "lr_decay_epoch": 7,               # epoch at which LR is multiplied by lr_gamma
     "lr_gamma":       0.1,
     "loss":          "msssim",         # "msssim" or "mse"
     "lambda_msssim": 0.9,              # weight of MS-SSIM term in the combined loss
