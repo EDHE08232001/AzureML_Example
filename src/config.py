@@ -35,6 +35,9 @@ _train_dir = (
 
 _val_dir = os.environ.get("AZUREML_VAL_DIR") or KODAK_DIR
 
+
+_checkpoint_dir = os.environ.get("AZUREML_CHECKPOINT_DIR") or CHECKPOINT_DIR
+
 # ── Hyperparameters ────────────────────────────────────────────────────────────
 CONFIG = {
     # ── Data paths ──────────────────────────────────────────────────────────
@@ -66,7 +69,7 @@ CONFIG = {
     "num_visualizations": 4,           # sample reconstruction images saved per run
 
     # ── Checkpointing ───────────────────────────────────────────────────────
-    "model_save_path": os.path.join(CHECKPOINT_DIR, "mcucoder.pth"),
+    "model_save_path": os.path.join(_checkpoint_dir, "mcucoder.pth"),
 
     # ── ImageNet preparation ─────────────────────────────────────────────────
     "imagenet_raw_dir":     IMAGENET_TRAIN_DIR,
