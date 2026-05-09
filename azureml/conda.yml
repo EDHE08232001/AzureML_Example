@@ -1,23 +1,69 @@
+# conda.yml — Python runtime spec for the Azure ML training/eval container.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# EDUCATIONAL OVERVIEW
+# ─────────────────────────────────────────────────────────────────────────────
+# Azure ML uses this file in two steps when it builds the job environment:
+#
+#   1. Pull the base Docker image declared in `Environment(image=...)`. Our
+#      base is `mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04`, which
+#      already contains CUDA, OpenMPI, and the Azure ML runtime hooks.
+#
+#   2. Create a conda environment INSIDE that image using this YAML, then
+#      activate it before running the job's `command`.
+#
+# The combined image is cached and reused across runs as long as both the
+# `name` of the Environment AND the contents of this file are unchanged. So:
+#   • First job using this env → ~5 min image build.
+#   • Every subsequent job     → seconds (cache hit).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# `name` is the conda environment's internal name. It does NOT have to match
+# the Azure ML Environment(name=...) — they are independent namespaces.
 name: mcucoder
+
+# Conda channels searched in order. `conda-forge` is the de-facto standard
+# community channel and supersedes the default channel for most packages.
 channels:
   - conda-forge
+
+# `dependencies` mixes conda packages and a nested `pip:` block. Conda
+# resolves the conda packages first, then runs pip to install the rest
+# inside the freshly-created conda env.
 dependencies:
+  # Pin the Python version so re-builds are reproducible.
   - python=3.10
+
+  # `pip` itself comes from conda; the `pip:` list below uses it.
   - pip
   - pip:
+      # ── Core deep-learning stack ───────────────────────────────────────
       - torch
       - torchvision
       - torchaudio
-      - torchmetrics
+      - torchmetrics      # MS-SSIM metric used in losses.py
+
+      # ── Learned-compression layers (decoder building blocks) ───────────
       - compressai
+
+      # ── Image / numerics ────────────────────────────────────────────────
       - pillow
-      - opencv-python
+      - opencv-python     # bicubic resize in prepare_data.py
       - numpy
       - tqdm
-      - matplotlib
+      - matplotlib        # rate-distortion plots
+
+      # ── HuggingFace dataset download (used by download_imagenet.py) ────
       - datasets
       - huggingface_hub
-      # MLflow + Azure ML MLflow plugin enable metric/artifact logging
-      # to the workspace tracking server from inside the job container.
+
+      # ── MLflow + Azure ML MLflow plugin ────────────────────────────────
+      # `mlflow` is the open-source client we call from src/train.py and
+      # src/evaluate.py to log params/metrics/artifacts.
+      # `azureml-mlflow` is the Azure ML PLUGIN that:
+      #   • redirects mlflow's tracking URI to the workspace's MLflow server
+      #   • makes `mlflow.start_run()` reuse Azure ML's auto-active run
+      # Without it, MLflow calls inside an Azure ML job would write to a
+      # local mlruns/ directory that disappears with the container.
       - mlflow
       - azureml-mlflow
