@@ -15,6 +15,7 @@ opencv-python>=4.10.0.84     # used in ImageNet preparation step (bicubic resize
 numpy>=1.19.5
 tqdm>=4.57.0
 matplotlib>=3.2.1             # rate-distortion plots
+mlflow>=2.10.0                # experiment / metric / artifact logging
 
 # Hugging Face dataset download
 # ── Data Download ──────────────────────────────────────────────────────────────

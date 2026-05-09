@@ -19,6 +19,7 @@ venvPC/
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # IDE / Editor
 .vscode/
@@ -54,3 +55,6 @@ datasets/
 
 # Logs
 *.log
+
+# MLflow local store (created when running training without Azure ML)
+mlruns/

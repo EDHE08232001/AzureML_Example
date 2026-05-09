@@ -16,12 +16,14 @@ Run via the repo-root entry point:
 
 import io
 import json
+import logging
 import os
 from typing import Dict, List, Tuple
 
 import matplotlib
 matplotlib.use("Agg")   # non-interactive backend (works without a display)
 import matplotlib.pyplot as plt
+import mlflow
 import numpy as np
 import torch
 from PIL import Image
@@ -33,6 +35,36 @@ from .data import RecursiveImageDataset
 from .losses import compute_msssim_db, compute_psnr
 from .model import MCUCoder
 from .utils import get_device
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("mcucoder.evaluate")
+
+
+def _safe_log_metrics(metrics: Dict[str, float], step: int = 0) -> None:
+    try:
+        numeric = {k: float(v) for k, v in metrics.items() if isinstance(v, (int, float))}
+        mlflow.log_metrics(numeric, step=step)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("MLflow log_metrics failed: %s", exc)
+
+
+def _safe_log_params(params: Dict[str, object]) -> None:
+    try:
+        mlflow.log_params({k: str(v) for k, v in params.items()})
+    except Exception as exc:  # pragma: no cover
+        logger.warning("MLflow log_params failed: %s", exc)
+
+
+def _safe_log_artifact(path: str, artifact_path: str = None) -> None:
+    try:
+        mlflow.log_artifact(path, artifact_path=artifact_path)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("MLflow log_artifact failed: %s", exc)
 
 
 # ── Quantization helpers ───────────────────────────────────────────────────────
@@ -147,7 +179,7 @@ def _plot_rd_curves(summary: dict, out_path: str) -> None:
     plt.tight_layout()
     plt.savefig(out_path, bbox_inches="tight")
     plt.close(fig)
-    print(f"Saved RD curves → {out_path}")
+    logger.info("Saved RD curves -> %s", out_path)
 
 
 # ── Main evaluation function ───────────────────────────────────────────────────
@@ -169,6 +201,23 @@ def evaluate_model() -> str:
             f"Please train the model first (option 1)."
         )
 
+    # ── Start (or reuse) an MLflow run ────────────────────────────────────────
+    active = mlflow.active_run()
+    run_ctx = (
+        mlflow.start_run(nested=True) if active is not None else mlflow.start_run()
+    )
+    run_ctx.__enter__()
+
+    _safe_log_params({
+        "image_size":       CONFIG["image_size"],
+        "latent_channels":  CONFIG["latent_channels"],
+        "decoder_channels": CONFIG["decoder_channels"],
+        "quant_step":       step,
+        "quant_bits":       bits,
+        "checkpoint_path":  model_path,
+        "device":           str(device),
+    })
+
     # ── Load model ────────────────────────────────────────────────────────────
     model = MCUCoder(
         latent_channels=CONFIG["latent_channels"],
@@ -178,13 +227,14 @@ def evaluate_model() -> str:
         torch.load(model_path, map_location=device, weights_only=True)
     )
     model.eval()
-    print(f"Loaded checkpoint: {model_path}")
+    logger.info("Loaded checkpoint: %s", model_path)
 
     # ── Kodak dataset ─────────────────────────────────────────────────────────
     dataset = RecursiveImageDataset(CONFIG["val_data_dir"], image_size=CONFIG["image_size"])
     if len(dataset) == 0:
         raise RuntimeError(f"No images found at: {CONFIG['val_data_dir']}")
-    print(f"Kodak images: {len(dataset)}")
+    logger.info("Kodak images: %d", len(dataset))
+    _safe_log_params({"val_size": len(dataset)})
 
     summary: Dict[str, List[dict]] = {"model": [], "jpeg": []}
 
@@ -223,8 +273,18 @@ def evaluate_model() -> str:
             "psnr":            total_psnr   / n,
             "msssim_db":       total_msssim / n,
         })
-        print(f"  k={k:2d} | bpp={total_bpp/n:.4f} | "
-              f"PSNR={total_psnr/n:.2f} dB | MS-SSIM={total_msssim/n:.2f} dB")
+        logger.info(
+            "  k=%2d | bpp=%.4f | PSNR=%.2f dB | MS-SSIM=%.2f dB",
+            k, total_bpp / n, total_psnr / n, total_msssim / n,
+        )
+        _safe_log_metrics(
+            {
+                "model_bpp":       total_bpp    / n,
+                "model_psnr":      total_psnr   / n,
+                "model_msssim_db": total_msssim / n,
+            },
+            step=k,
+        )
 
     # ── JPEG baseline ─────────────────────────────────────────────────────────
     for quality in tqdm(CONFIG["jpeg_qualities"], desc="JPEG"):
@@ -257,16 +317,41 @@ def evaluate_model() -> str:
             "psnr":      total_psnr   / n,
             "msssim_db": total_msssim / n,
         })
-        print(f"  JPEG q={quality:3d} | bpp={total_bpp/n:.4f} | "
-              f"PSNR={total_psnr/n:.2f} dB | MS-SSIM={total_msssim/n:.2f} dB")
+        logger.info(
+            "  JPEG q=%3d | bpp=%.4f | PSNR=%.2f dB | MS-SSIM=%.2f dB",
+            quality, total_bpp / n, total_psnr / n, total_msssim / n,
+        )
+        _safe_log_metrics(
+            {
+                "jpeg_bpp":       total_bpp    / n,
+                "jpeg_psnr":      total_psnr   / n,
+                "jpeg_msssim_db": total_msssim / n,
+            },
+            step=quality,
+        )
 
     # ── Save outputs ──────────────────────────────────────────────────────────
     json_path = os.path.abspath(os.path.join(RESULTS_DIR, "eval_summary.json"))
     with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2)
-    print(f"\nSaved summary → {json_path}")
+    logger.info("Saved summary -> %s", json_path)
 
     plot_path = os.path.abspath(os.path.join(RESULTS_DIR, "rd_curves.pdf"))
     _plot_rd_curves(summary, plot_path)
+
+    # Log artifacts to MLflow (PDF, JSON, sample reconstructions).
+    _safe_log_artifact(json_path, artifact_path="results")
+    _safe_log_artifact(plot_path, artifact_path="results")
+    for fname in os.listdir(RESULTS_DIR):
+        if fname.endswith(".png"):
+            _safe_log_artifact(
+                os.path.join(RESULTS_DIR, fname), artifact_path="results/samples",
+            )
+
+    # End the MLflow run we opened above.
+    try:
+        run_ctx.__exit__(None, None, None)
+    except Exception:
+        pass
 
     return json_path

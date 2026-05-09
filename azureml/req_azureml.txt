@@ -1,6 +1,11 @@
-# Azure ML Required Packages
+# Azure ML Required Packages (for the LOCAL submitter machine)
 azure-ai-ml
 azure-identity
 
 # .env loader
 python-dotenv
+
+# MLflow client (only needed locally if you want to query runs from your machine;
+# inside the Azure ML job container, mlflow + azureml-mlflow are installed via
+# azureml/conda.yml).
+mlflow
