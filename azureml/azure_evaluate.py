@@ -34,7 +34,7 @@ conda_file = os.path.join(os.path.dirname(__file__), "conda.yml")
 env = Environment(
     name="mcucoder-env",
     conda_file=conda_file,
-    image="mcr.microsoft.com/azureml/curated/pytorch-2.2-cuda11.8:latest",
+    image="mcr.microsoft.com/azureml/curated/python-sdk-v2:latest",
 )
 
 job = command(
