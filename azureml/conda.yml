@@ -17,3 +17,7 @@ dependencies:
       - matplotlib
       - datasets
       - huggingface_hub
+      # MLflow + Azure ML MLflow plugin enable metric/artifact logging
+      # to the workspace tracking server from inside the job container.
+      - mlflow
+      - azureml-mlflow
