@@ -31,13 +31,14 @@ env = Environment(
     conda_file=conda_file,
     image="mcr.microsoft.com/azureml/curated/pytorch-2.2-cuda11.8:latest"
 )
+compute_cluster = "edheazml"
 
 # Define the training job
 job = command(
     code="./",
     command="python main.py --mode train",
     environment=env,
-    compute="gpu-cluster",
+    compute=compute_cluster,
     inputs={
         "imagenet": Input(
             type=AssetTypes.URI_FOLDER,
