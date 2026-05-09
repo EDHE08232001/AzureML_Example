@@ -29,7 +29,7 @@ conda_file = os.path.join(os.path.dirname(__file__), "conda.yml")
 env = Environment(
     name="mcucoder-env",
     conda_file=conda_file,
-    image="mcr.microsoft.com/azureml/curated/python-sdk-v2:latest"
+    image="mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest"
 )
 compute_cluster = "edheazml"
 
