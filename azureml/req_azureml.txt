@@ -1,11 +1,37 @@
-# Azure ML Required Packages (for the LOCAL submitter machine)
+# req_azureml.txt — Python deps for the LOCAL submitter machine.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# EDUCATIONAL NOTE — two distinct dependency surfaces
+# ─────────────────────────────────────────────────────────────────────────────
+# Azure ML jobs have TWO Python environments and they should not be confused:
+#
+#   1. SUBMITTER side (this file)     — runs on YOUR laptop, on a CI runner,
+#                                       or wherever you call
+#                                         `python azureml/azure_train.py`.
+#                                       Only needs the SDK + auth + .env.
+#
+#   2. JOB side (azureml/conda.yml)   — runs INSIDE the Azure ML container
+#                                       on the compute cluster. Needs the
+#                                       full ML stack (torch, compressai,
+#                                       mlflow, …) because the training and
+#                                       evaluation code actually executes
+#                                       there.
+#
+# Install this file with:
+#     pip install -r azureml/req_azureml.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Azure ML Python SDK v2. Provides MLClient, command(), Input, Environment, …
 azure-ai-ml
+
+# Azure identity / credential providers (InteractiveBrowserCredential, etc.).
 azure-identity
 
-# .env loader
+# Reads the .env file in the repo root into os.environ.
 python-dotenv
 
-# MLflow client (only needed locally if you want to query runs from your machine;
-# inside the Azure ML job container, mlflow + azureml-mlflow are installed via
-# azureml/conda.yml).
+# MLflow client (only needed locally if you want to query runs from your
+# machine — e.g. download a run's artifacts via mlflow.tracking.MlflowClient).
+# Inside the Azure ML job container, mlflow + azureml-mlflow are installed
+# via azureml/conda.yml, NOT from this file.
 mlflow
