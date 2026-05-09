@@ -24,7 +24,7 @@ ml_client = MLClient(
     workspace_name=os.getenv("AZURE_WORKSPACE_NAME"),
 )
 
-conda_file = os.path.join(os.path.dirname(__file__), "conda.yaml")
+conda_file = os.path.join(os.path.dirname(__file__), "conda.yml")
 
 env = Environment(
     name="mcucoder-env",
