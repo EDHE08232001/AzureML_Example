@@ -28,13 +28,18 @@ for _d in [CHECKPOINT_DIR, RESULTS_DIR]:
 
 # Use the prepared (flat) ImageNet directory if it exists, otherwise fall back
 # to the raw directory (which may contain class-subdirectories).
-_train_dir = IMAGENET_OUT_DIR if os.path.isdir(IMAGENET_OUT_DIR) else IMAGENET_TRAIN_DIR
+_train_dir = (
+    os.environ.get("AZUREML_TRAIN_DIR")
+    or (IMAGENET_OUT_DIR if os.path.isdir(IMAGENET_OUT_DIR) else IMAGENET_TRAIN_DIR)
+)
+
+_val_dir = os.environ.get("AZUREML_VAL_DIR") or KODAK_DIR
 
 # ── Hyperparameters ────────────────────────────────────────────────────────────
 CONFIG = {
     # ── Data paths ──────────────────────────────────────────────────────────
     "train_data_dir": _train_dir,
-    "val_data_dir":   KODAK_DIR,
+    "val_data_dir":   _val_dir,
     "image_size":     224,              # center-crop size used for all images
 
     # ── DataLoader ──────────────────────────────────────────────────────────
